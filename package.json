@@ -1,0 +1,21 @@
+{
+  "name": "dns-scrape",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node -r dotenv/config server.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "gerrard00",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "escape-string-regexp": "^1.0.5",
+    "md5": "^2.0.0",
+    "native-dns": "^0.7.0",
+    "request": "^2.69.0"
+  },
+  "devDependencies": {
+    "dotenv": "^2.0.0"
+  }
+}
