@@ -13,6 +13,7 @@
     "escape-string-regexp": "^1.0.5",
     "md5": "^2.0.0",
     "native-dns": "^0.7.0",
+    "node-cache": "^3.2.0",
     "request": "^2.69.0"
   },
   "devDependencies": {

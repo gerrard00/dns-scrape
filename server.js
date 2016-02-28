@@ -1,42 +1,46 @@
 'use strict';
 
-const archerC7Plugin = require('./src/plugins/archerc7');
-const config = require('./src/config');
 const dns = require('native-dns');
+const scraperSerivce = require('./src/scraperService');
+const config = require('./src/config');
 
 // TODO: allow user to configure a pattern for which domains to listen for
 // TODO: make this a config setting
-const targetDomainExpression = /\.lindsayland$/i;
+// const targetDomainExpression = /\.lindsayland$/i;
 
-//TODO: communication with the router plugins should be in another module
+// TODO: communication with the router plugins should be in another module
 
 const server = dns.createServer();
 
 server.on('request', (request, response) => {
-
-  archerC7Plugin.getClientList(config)
+  console.log(`${new Date()} request->`);
+  //     response.send();
+  //     return;
+  scraperSerivce.getClientList(config)
     .then(clientList => {
-      console.log(clientList);
+      console.log('got client list');
       request.question.forEach(question => {
         let matchingClient = clientList.find(client =>
           client.host.toLowerCase() === question.name.toLowerCase());
 
-        if(matchingClient) {
+        if (matchingClient) {
           response.answer.push(dns.A({
-            name: matchingClient.host,
+            name: matchingClient.host.toLowerCase(),
             address: matchingClient.ipv4,
+            // TODO: don't hardcode
             ttl: 600
           }));
-          response.send();
+          console.log('<--request');
         }
       });
+      response.send();
     })
     .catch(err => console.error(err));
- 
 });
 
-server.on('error', (err, buff, req, res) => {
-  console.log(err.stack);
+server.on('error', err => {
+  // TODO: exit the process
+  console.log(err);
 });
 
-server.serve(5353);
+server.serve(53);
