@@ -71,7 +71,16 @@ module.exports = {
               (error, response, body) => {
                 // TODO; error handling
                 let clients = parseClientList(body);
+                //resolve now, now use having the caller wait for us to logout
                 resolve(clients);
+
+                request('/userRpm/Logout.htm', (err, response, body) => {
+                  if (err) {
+                    // TODO: really log ths error
+                    console.error(err);
+                  }
+                  console.log('logout: ', response.statusCode);
+                });
               });
           }
         });
