@@ -4,8 +4,11 @@ let request = require('request');
 const md5 = require('md5');
 const escapeStringRegexp = require('escape-string-regexp');
 
+//TODO: handle outdated cache (i.e. a new host is added after the plugin caches the list
 module.exports = {
   getClientList(config) {
+    //TODO: hacky, find a better way to pass the config context
+    config = config.archerc7;
     // TODO: validate config
     const authKeyPattern = new RegExp(escapeStringRegexp(config.url) +
       '/(\\w*)', 'g');

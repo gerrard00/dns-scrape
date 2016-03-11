@@ -1,46 +1,67 @@
 'use strict';
 
 const dns = require('native-dns');
-const scraperSerivce = require('./src/scraperService');
 const config = require('./src/config');
+const ScraperSerivce = require('./src/scraperService');
 
-// TODO: allow user to configure a pattern for which domains to listen for
 // TODO: make this a config setting
-// const targetDomainExpression = /\.lindsayland$/i;
+// TODO: replace console statements with log calls
+const targetDomainExpression = /\.local$/i;
 
-// TODO: communication with the router plugins should be in another module
-
+const scraperSerivce = new ScraperSerivce(config);
 const server = dns.createServer();
 
 server.on('request', (request, response) => {
-  console.log(`${new Date()} request->`);
-  //     response.send();
-  //     return;
-  scraperSerivce.getClientList(config)
-    .then(clientList => {
-      console.log('got client list');
-      request.question.forEach(question => {
-        let matchingClient = clientList.find(client =>
-          client.host.toLowerCase() === question.name.toLowerCase());
+  // to keep things simple, assume one question per request
+  let questionName = request.question[0].name;
 
-        if (matchingClient) {
-          response.answer.push(dns.A({
-            name: matchingClient.host.toLowerCase(),
-            address: matchingClient.ipv4,
-            // TODO: don't hardcode
-            ttl: 600
-          }));
-          console.log('<--request');
-        }
-      });
+  console.log(`${new Date()} request for ${questionName} ->`);
+
+  if (!targetDomainExpression.test(questionName)) {
+    console.log('Not in target domain.');
+    // TODO: make a request to our fallback server
+    return;
+  }
+
+  let editedQuestionName =
+    questionName.toLowerCase().replace(/\.local/, '');
+
+  scraperSerivce.getAddress(editedQuestionName)
+    .then(matchingClient => {
+      if (matchingClient) {
+        console.log('matched ', questionName);
+        response.answer.push(dns.A({
+          name: questionName,
+          address: matchingClient.ipv4,
+          // TODO: ipv6
+          // TODO: don't hardcode
+          ttl: 600
+        }));
+      } else {
+        console.log('didn\'t match ', questionName);
+      }
       response.send();
+      console.log('<--request');
     })
-    .catch(err => console.error(err));
+    .catch(err => {
+      console.log('Scraper Error!');
+      console.error(err);
+    });
 });
 
+server.on('listening', () => console.log('server listening:', server.address()));
+server.on('close', () => console.log('server closed'));
+server.on('socketError', err => {
+  console.error('Socket error!');
+  console.error(err);
+});
 server.on('error', err => {
   // TODO: exit the process
-  console.log(err);
+  console.error('Unhandled Error!');
+  console.error(err);
+  console.log(err.stack);
 });
 
+//TODO: make this configurable
+//TODO: need to run with sudo for such a low port
 server.serve(53);
