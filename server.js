@@ -3,12 +3,15 @@
 const dns = require('native-dns');
 const config = require('./src/config');
 const ScraperSerivce = require('./src/scraperService');
+const DnsProxyService = require('./src/dnsProxyService');
 
 // TODO: make this a config setting
 // TODO: replace console statements with log calls
+// TODO; figure out the recursion requested error in responses
 const targetDomainExpression = /\.local$/i;
 
 const scraperSerivce = new ScraperSerivce(config);
+const dnsProxySerivce = new DnsProxyService(config);
 const server = dns.createServer();
 
 server.on('request', (request, response) => {
@@ -18,8 +21,20 @@ server.on('request', (request, response) => {
   console.log(`${new Date()} request for ${questionName} ->`);
 
   if (!targetDomainExpression.test(questionName)) {
+    // make a request to our fallback server
     console.log('Not in target domain.');
-    // TODO: make a request to our fallback server
+    dnsProxySerivce.makeRequest(request)
+      .then(proxyAnswer => {
+        console.log('Got response from proxy service.');
+        response.answer = proxyAnswer.answer;
+        response.send();
+        console.log('<--request');
+      })
+      .catch(err => {
+        console.error('Proxied Request Error!');
+        console.error(err);
+      });
+
     return;
   }
 
