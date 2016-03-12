@@ -35,3 +35,6 @@ jspm_packages
 
 # development environmental settings
 .env
+
+# ignore node-windows created daemon folder
+daemon
