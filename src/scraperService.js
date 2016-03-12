@@ -8,7 +8,7 @@ module.exports = ScraperService;
 function ScraperService(config) {
   this._config = config;
   //TODO: this should be configurable
-  this._cache = new NodeCache({stdTTL: 300, checkperiod: 60});
+  this._cache = new NodeCache({stdTTL: 3000, checkperiod: 60});
 }
 
 function findMatchingClient(clientList, targetHost) {
