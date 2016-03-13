@@ -3,12 +3,10 @@
 const NodeCache = require('node-cache');
 const plugin = require('./plugins/archerc7');
 
-module.exports = ScraperService;
-
 function ScraperService(config) {
   this._config = config;
   // TODO: this should be configurable
-  this._cache = new NodeCache({stdTTL: 3000, checkperiod: 60});
+  this._cache = new NodeCache({ stdTTL: 3000, checkperiod: 60 });
 }
 
 function findMatchingClient(clientList, targetHost) {
@@ -16,15 +14,15 @@ function findMatchingClient(clientList, targetHost) {
     client.host.toLowerCase() === targetHost);
 }
 
-ScraperService.prototype.getAddress = function(targetHost) {
+ScraperService.prototype.getAddress = function getAddress(targetHost) {
   return new Promise((resolve, reject) => {
     let result;
-    // TODO: generate a symbol and stick it to the plugin, then use that as the handle to get stuff from cache
-    let clientList = this._cache.get('bang');
+    // TODO: generate a symbol and stick it to the plugin
+    const cachedClientList = this._cache.get('bang');
 
-    if (clientList) {
+    if (cachedClientList) {
       console.log('cache available');
-      result = findMatchingClient(clientList, targetHost);
+      result = findMatchingClient(cachedClientList, targetHost);
 
       if (result) {
         console.log('cache hit');
@@ -45,3 +43,5 @@ ScraperService.prototype.getAddress = function(targetHost) {
       .catch(err => reject(err));
   });
 };
+
+module.exports = ScraperService;

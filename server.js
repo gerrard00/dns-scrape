@@ -2,6 +2,7 @@
 
 const dns = require('native-dns');
 const config = require('./src/config');
+require('dotenv').config();
 const ScraperSerivce = require('./src/scraperService');
 const DnsProxyService = require('./src/dnsProxyService');
 
@@ -16,7 +17,7 @@ const server = dns.createServer();
 
 server.on('request', (request, response) => {
   // to keep things simple, assume one question per request
-  let questionName = request.question[0].name;
+  const questionName = request.question[0].name;
 
   console.log(`${new Date()} request for ${questionName} ->`);
 
@@ -38,7 +39,7 @@ server.on('request', (request, response) => {
     return;
   }
 
-  let editedQuestionName =
+  const editedQuestionName =
     questionName.toLowerCase().replace(/\.local/, '');
 
   scraperSerivce.getAddress(editedQuestionName)
@@ -50,7 +51,7 @@ server.on('request', (request, response) => {
           address: matchingClient.ipv4,
           // TODO: ipv6
           // TODO: don't hardcode
-          ttl: 600
+          ttl: 600,
         }));
       } else {
         console.log('didn\'t match ', questionName);
@@ -77,6 +78,6 @@ server.on('error', err => {
   console.log(err.stack);
 });
 
-//TODO: make this configurable
-//TODO: need to run with sudo for such a low port
+// TODO: make this configurable
+// TODO: need to run with sudo for such a low port
 server.serve(53);
