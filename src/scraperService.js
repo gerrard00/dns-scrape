@@ -7,7 +7,7 @@ module.exports = ScraperService;
 
 function ScraperService(config) {
   this._config = config;
-  //TODO: this should be configurable
+  // TODO: this should be configurable
   this._cache = new NodeCache({stdTTL: 3000, checkperiod: 60});
 }
 
@@ -35,12 +35,13 @@ ScraperService.prototype.getAddress = function(targetHost) {
     console.log('cache miss');
 
     return plugin.getClientList(this._config)
-    .then(clientList => {
-      console.log('loaded client list');
-      this._cache.set('bang', clientList);
-      // console.dir(clientList);
-      result = findMatchingClient(clientList, targetHost);
-      return resolve(result);
-    });
+      .then(clientList => {
+        console.log('loaded client list');
+        this._cache.set('bang', clientList);
+        // console.dir(clientList);
+        result = findMatchingClient(clientList, targetHost);
+        return resolve(result);
+      })
+      .catch(err => reject(err));
   });
 };
