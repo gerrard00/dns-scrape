@@ -4,7 +4,8 @@
   "main": "server.js",
   "scripts": {
     "start": "node -r dotenv/config server.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "lint": "./node_modules/.bin/eslint server.js src"
   },
   "author": "gerrard00",
   "license": "ISC",
@@ -17,6 +18,9 @@
     "request": "^2.69.0"
   },
   "devDependencies": {
-    "dotenv": "^2.0.0"
+    "dotenv": "^2.0.0",
+    "eslint": "^2.4.0",
+    "eslint-config-airbnb": "^6.1.0",
+    "eslint-plugin-react": "^4.2.1"
   }
 }
