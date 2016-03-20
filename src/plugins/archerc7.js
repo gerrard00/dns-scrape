@@ -3,20 +3,43 @@
 let request = require('request');
 const md5 = require('md5');
 const escapeStringRegexp = require('escape-string-regexp');
+const errors = require('../errors.js');
 
 // TODO: handle outdated cache (i.e. a new host is added after the plugin caches the list
 module.exports = {
   getClientList(totalConfig) {
+    // TODO: move the regex patterns out of this function
     // TODO: hacky, find a better way to pass the config context
+
+    // TODO: error handling for cases when no archerc7 config is available
     const config = totalConfig.archerc7;
-    // TODO: validate config
-    const authKeyPattern = new RegExp(`${escapeStringRegexp(config.url)}/(\\w*)`, 'g');
+    if (!config.username) {
+      return Promise.reject(
+        new errors.ConfigurationError('Username is required.',
+          'username'));
+    }
+
+    if (!config.url) {
+      return Promise.reject(
+        new errors.ConfigurationError('Url is required.',
+          'url'));
+    }
+
+    const authKeyPattern =
+      new RegExp(`${escapeStringRegexp(config.url)}/(\\w*)/userRpm/Index.htm`, 'g');
     const clientListArrayPattern = /DHCPDynList = new Array\(([^\(]*)\)/g;
+
 
     function parseClientList(body) {
       // get the contents of the array
       // TODO: error handling
-      return clientListArrayPattern.exec(body)[1]
+      const execResult = clientListArrayPattern.exec(body);
+
+      if (!execResult) {
+        throw new Error('Could not parse dhcp client list');
+      }
+
+      return execResult[1]
         .replace(/\n/g, ' ')
         .replace(/"/g, '')
         .split(',')
@@ -41,12 +64,13 @@ module.exports = {
       let authCookieValue =
         new Buffer(`${config.username}:${md5(config.password)}`)
         .toString('base64');
-      // escape is deprecated, but match router code
+        // escape is deprecated, but match router code
       authCookieValue = escape(authCookieValue);
 
       const authorizationCookie =
         request.cookie(`Authorization=Basic%20${authCookieValue};path=/`);
 
+      // TODO: remove this
       const cookieJar = request.jar();
       cookieJar.setCookie(authorizationCookie, config.url);
 
@@ -59,37 +83,45 @@ module.exports = {
           // TODO: error handling
           const authKeyMatches = authKeyPattern.exec(body);
 
-          if (!authKeyMatches) {
-            return reject(new Error(`No auth keys found, examine body: ${body}`));
+          if (!authKeyMatches || authKeyMatches.length !== 2) {
+            return reject(
+              new errors.LoginError(`Login failed: No auth keys found, examine body: ${body}`));
           }
 
-          // TODO: handle the case where nothing matches
-          if (authKeyMatches && authKeyMatches.length === 2) {
-            const authKey = authKeyMatches[1];
-            const authenticatedRequest = request.defaults(
-              { baseUrl: `${config.url}/${authKey}` });
+          const authKey = authKeyMatches[1];
+          const authenticatedRequest = request.defaults(
+            { baseUrl: `${config.url}/${authKey}` });
 
-            authenticatedRequest('/userRpm/AssignedIpAddrListRpm.htm',
-              (addressListError, addressListResponse, addressListBody) => {
-                // TODO; addressListError handling
-                if (addressListError) {
-                  return reject(addressListError);
+          authenticatedRequest('/userRpm/AssignedIpAddrListRpm.htm',
+            (addressListError, addressListResponse, addressListBody) => {
+              // TODO: addressListError handling
+              if (addressListError) {
+                return reject(addressListError);
+              }
+
+              let clients;
+              let clientParseError;
+
+              try {
+                clients = parseClientList(addressListBody);
+              } catch (err) {
+                clientParseError = err;
+              }
+
+              request('/userRpm/Logout.htm', (logoutError, logoutResponse) => {
+                if (logoutError) {
+                   // TODO: really log ths addressListError
+                  console.error(logoutError);
+                  return;
                 }
-
-                const clients = parseClientList(addressListBody);
-
-                request('/userRpm/Logout.htm', (err, logoutResponse) => {
-                  if (err) {
-                    // TODO: really log ths addressListError
-                    console.addressListError(err);
-                  }
-                  console.log('logout: ', logoutResponse.statusCode);
-                });
-
-                // resolve now, no use having the caller wait for us to logout
-                return resolve(clients);
+                console.log('logout: ', logoutResponse.statusCode);
               });
-          }
+
+              // resolve/reject now, no use having the caller wait for us to logout
+              return (clientParseError) ?
+                reject(clientParseError) :
+                resolve(clients);
+            });
         });
     });
   },

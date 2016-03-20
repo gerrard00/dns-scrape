@@ -9,6 +9,7 @@ const DnsProxyService = require('./src/dnsProxyService');
 // TODO: make this a config setting
 // TODO: replace console statements with log calls
 // TODO; figure out the recursion requested error in responses
+// TODO: we should stop trying a plugin if login fails.
 const targetDomainExpression = /\.local$/i;
 
 const scraperSerivce = new ScraperSerivce(config);
