@@ -7,12 +7,11 @@ const errors = require('../errors.js');
 
 // TODO: handle outdated cache (i.e. a new host is added after the plugin caches the list
 module.exports = {
-  getClientList(totalConfig) {
+  getClientList(config) {
     // TODO: move the regex patterns out of this function
     // TODO: hacky, find a better way to pass the config context
 
     // TODO: error handling for cases when no archerc7 config is available
-    const config = totalConfig.archerc7;
     if (!config.username) {
       return Promise.reject(
         new errors.ConfigurationError('Username is required.',

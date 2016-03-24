@@ -15,16 +15,14 @@ describe('archerc7', function archerc7() {
   beforeEach(function beforeEach() {
     nock.cleanAll();
     config = {
-      archerc7: {
-        url: 'http://hostname',
-        username: 'username',
-        password: 'password',
-      },
+      url: 'http://hostname',
+      username: 'username',
+      password: 'password',
     };
   });
 
   it('can make requests to router', function canMakeRequestsToRouter() {
-    nock(config.archerc7.url)
+    nock(config.url)
       .get('/userRpm/LoginRpm.htm?Save=Save')
       .replyWithFile(200, `${__dirname}/../data/login-success.html`)
       .get('/WSGLKMGBVHXJPZTB/userRpm/AssignedIpAddrListRpm.htm')
@@ -51,26 +49,14 @@ describe('archerc7', function archerc7() {
   describe('config', function describeConfig() {
     it('throws if no username is provided',
       function throwsIfNoUsernameIsProvided() {
-        config = {
-          archerc7: {
-            url: 'http://hostname',
-            password: 'password',
-          },
-        };
-
+        delete config.username;
         return sut.getClientList(config)
           .should.be.rejectedWith(errors.ConfigurationError);
       });
 
     it('throws if no url is provided',
       function throwsIfNoUrlIsProvided() {
-        config = {
-          archerc7: {
-            username: 'username',
-            password: 'password',
-          },
-        };
-
+        delete config.url;
         return sut.getClientList(config)
           .should.be.rejectedWith(errors.ConfigurationError);
       });
@@ -78,7 +64,7 @@ describe('archerc7', function archerc7() {
 
   it('throws if login to the router fails',
     function throwsIfLoginToTheRouterFails() {
-      nock(config.archerc7.url)
+      nock(config.url)
         .get('/userRpm/LoginRpm.htm?Save=Save')
         .replyWithFile(200, `${__dirname}/../data/login-failure.html`);
 
@@ -88,7 +74,7 @@ describe('archerc7', function archerc7() {
 
   it('throws if the router client list is unparsable',
     function throwsIfTheRouterClientListIsUnparsable() {
-      nock(config.archerc7.url)
+      nock(config.url)
         .get('/userRpm/LoginRpm.htm?Save=Save')
         .replyWithFile(200, `${__dirname}/../data/login-success.html`)
         .get('/WSGLKMGBVHXJPZTB/userRpm/AssignedIpAddrListRpm.htm')

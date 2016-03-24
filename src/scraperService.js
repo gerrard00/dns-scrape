@@ -32,7 +32,9 @@ ScraperService.prototype.getAddress = function getAddress(targetHost) {
 
     console.log('cache miss');
 
-    return plugin.getClientList(this._config)
+    // TODO: load any configured plugin
+    // TODO: don't hardcode the config for this plugin specifically
+    return plugin.getClientList(this._config.plugins[0])
       .then(clientList => {
         console.log('loaded client list');
         this._cache.set('bang', clientList);
