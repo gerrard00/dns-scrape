@@ -2,8 +2,17 @@
 
 const NodeCache = require('node-cache');
 const plugin = require('./plugins/archerc7');
+const errors = require('./errors');
 
 function ScraperService(config) {
+  if (!config) {
+    throw new errors.ConfigurationError('No config provided.');
+  }
+
+  if (!config.plugins) {
+    throw new errors.ConfigurationError('Configuration contained no plugins section.');
+  }
+  // TODO: throw if not valid witha plugins section
   this._config = config;
   // TODO: this should be configurable
   this._cache = new NodeCache({ stdTTL: 3000, checkperiod: 60 });
